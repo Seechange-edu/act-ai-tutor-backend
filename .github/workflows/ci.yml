@@ -72,12 +72,12 @@ jobs:
         run: |
           docker buildx build \
             --file Dockerfile \
-            --tag ${ECR_REGISTRY}/${ECR_REPOSITORY}/${ENVIRONMENT}:${ACTIVE} \
+            --tag ${ECR_REGISTRY}/${ECR_REPOSITORY}/${ACTIVE}:${ACTIVE} \
             --build-arg ENVIRONMENT=dev \
             --cache-from=type=gha \
             --cache-to=type=gha,mode=max \
-            --build-arg ENVIRONMENT=${{ env.ENVIRONMENT }} \
-            --tag ${ECR_REGISTRY}/${ECR_REPOSITORY}/${ENVIRONMENT}:${ACTIVE} \
+            --build-arg ENVIRONMENT=${{ env.ACTIVE }} \
+            --tag ${ECR_REGISTRY}/${ECR_REPOSITORY}/${ACTIVE}:${ACTIVE} \
             --file Dockerfile \
             . \
             --push
@@ -107,7 +107,7 @@ jobs:
             docker run --name ${{ env.NAME }} -d \
               -p ${{ env.OUT_PORT }}:${{ env.PORT }} \
               --restart unless-stopped \
-              -e ENVIRONMENT=${{ env.ENVIRONMENT }} \
+              -e ENVIRONMENT=${{ env.ACTIVE }} \
               ${ECR_REGISTRY}/${ECR_REPOSITORY}/${ACTIVE}:${ACTIVE}
             docker image prune --force
             docker container prune --force
