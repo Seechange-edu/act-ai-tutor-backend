@@ -105,6 +105,7 @@ jobs:
               docker rm -f ${{ env.NAME }}
             fi
             docker run --name ${{ env.NAME }} -d \
+              -m 512m --memory-swap 512m \
               -p ${{ env.OUT_PORT }}:${{ env.PORT }} \
               --restart unless-stopped \
               -e ENVIRONMENT=${{ env.ACTIVE }} \
