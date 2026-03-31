@@ -91,7 +91,7 @@ jobs:
           ACTIVE: ${{ env.ACTIVE }}
 
         with:
-          host: ${{ vars.REMOTE_HOST }}
+          host: ${{ env.REMOTE_HOST }}
           username: ${{ vars.REMOTE_USER }}
           key: ${{ secrets.REMOTE_SSH_KEY }}
           envs: ECR_REGISTRY,ECR_REPOSITORY,ACTIVE,ECR_TOKEN
@@ -120,7 +120,7 @@ jobs:
     steps:
       - name: Send Teams Notification
         env:
-          WEBHOOK: ${{ vars.TEAMS_WEBHOOK_URL }}
+          WEBHOOK: ${{ env.TEAMS_WEBHOOK_URL }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           curl -X POST -H "Content-Type: application/json" \
