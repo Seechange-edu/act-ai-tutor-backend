@@ -118,6 +118,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Get Tag Info
+        uses: Seechange-edu/Parse-Action-Tag@main
+        with:
+          githubToken: ${{ secrets.ACTION_TOKEN }}
+          type: parse
+          
       - name: Send Teams Notification
         env:
           WEBHOOK: ${{ env.TEAMS_WEBHOOK_URL }}
