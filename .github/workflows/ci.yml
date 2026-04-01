@@ -70,15 +70,15 @@ jobs:
           ACTIVE: ${{ env.ACTIVE }}
 
         run: |
+          IMAGE_URI="${ECR_REGISTRY}/${ECR_REPOSITORY}/${ACTIVE}:${ACTIVE}"
+          echo "IMAGE_URI=${IMAGE_URI}" >> $GITHUB_ENV
           docker buildx build \
             --file Dockerfile \
-            --tag ${ECR_REGISTRY}/${ECR_REPOSITORY}/${ACTIVE}:${ACTIVE} \
+            --tag ${IMAGE_URI} \
             --build-arg ENVIRONMENT=dev \
             --cache-from=type=gha \
             --cache-to=type=gha,mode=max \
             --build-arg ENVIRONMENT=${{ env.ACTIVE }} \
-            --tag ${ECR_REGISTRY}/${ECR_REPOSITORY}/${ACTIVE}:${ACTIVE} \
-            --file Dockerfile \
             . \
             --push
 
@@ -87,20 +87,19 @@ jobs:
         env:
           ECR_TOKEN: ${{ steps.ecr-login-token.outputs.token }}
           ECR_REGISTRY: ${{ steps.login-pf-aws-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ secrets.AWS_ECR_REPOSITORY }}
-          ACTIVE: ${{ env.ACTIVE }}
+          IMAGE_URI: ${{ env.IMAGE_URI }}
 
         with:
           host: ${{ env.REMOTE_HOST }}
           username: ${{ vars.REMOTE_USER }}
           key: ${{ secrets.REMOTE_SSH_KEY }}
-          envs: ECR_REGISTRY,ECR_REPOSITORY,ACTIVE,ECR_TOKEN
+          envs: ECR_REGISTRY,ECR_TOKEN,IMAGE_URI
           script: |
           
             # Login to AWS ECR using temporary token from GitHub Actions
             echo ${ECR_TOKEN} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
 
-            docker pull ${ECR_REGISTRY}/${ECR_REPOSITORY}/${ACTIVE}:${ACTIVE}
+            docker pull ${IMAGE_URI}
             if [ "$(docker ps -a --format '{{.Names}}' | grep -c ${{ env.NAME }})" -gt 0 ]; then 
               docker rm -f ${{ env.NAME }}
             fi
@@ -109,7 +108,7 @@ jobs:
               -p ${{ env.OUT_PORT }}:${{ env.PORT }} \
               --restart unless-stopped \
               -e ENVIRONMENT=${{ env.ACTIVE }} \
-              ${ECR_REGISTRY}/${ECR_REPOSITORY}/${ACTIVE}:${ACTIVE}
+              ${IMAGE_URI}
             docker image prune --force
             docker container prune --force
 
