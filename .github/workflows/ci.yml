@@ -110,6 +110,18 @@ jobs:
               --restart unless-stopped \
               -e ENVIRONMENT=${{ env.ACTIVE }} \
               ${IMAGE_URI}
+
+            WORKER_NAME="${{ env.NAME }}-worker"
+            if [ "$(docker ps -a --format '{{.Names}}' | grep -c ${WORKER_NAME})" -gt 0 ]; then 
+              docker rm -f ${WORKER_NAME}
+            fi
+            docker run --name ${WORKER_NAME} -d \
+              -m 512m --memory-swap 512m \
+              --restart unless-stopped \
+              -e ENVIRONMENT=${{ env.ACTIVE }} \
+              ${IMAGE_URI} \
+              python scripts/azure_pa_worker.py
+
             docker image prune --force
             docker container prune --force
 
