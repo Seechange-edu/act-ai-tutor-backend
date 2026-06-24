@@ -108,7 +108,7 @@ jobs:
               -m 1024m --memory-swap 1024m \
               -p ${{ env.OUT_PORT }}:${{ env.PORT }} \
               --restart unless-stopped \
-              -e ENVIRONMENT=${{ env.ACTIVE }} \
+              --env-file /home/forge/env.ai-tutor/${{ env.ACTIVE }}.env \
               ${IMAGE_URI}
 
             WORKER_NAME="${{ env.NAME }}-worker"
@@ -118,7 +118,7 @@ jobs:
             docker run --name ${WORKER_NAME} -d \
               -m 512m --memory-swap 512m \
               --restart unless-stopped \
-              -e ENVIRONMENT=${{ env.ACTIVE }} \
+              --env-file /home/forge/env.ai-tutor/${{ env.ACTIVE }}.env \
               ${IMAGE_URI} \
               python scripts/azure_pa_worker.py
 
