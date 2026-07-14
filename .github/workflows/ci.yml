@@ -109,6 +109,11 @@ jobs:
               -p ${{ env.OUT_PORT }}:${{ env.PORT }} \
               --restart unless-stopped \
               --env-file /home/forge/env.ai-tutor/${{ env.ACTIVE }}.env \
+              --log-driver=awslogs \
+              --log-opt awslogs-region=ap-east-1 \
+              --log-opt awslogs-group=/docker/${{ env.NAME }} \
+              --log-opt awslogs-stream=${{ env.ACTIVE }} \
+              --log-opt awslogs-create-group=true \
               ${IMAGE_URI}
 
             WORKER_NAME="${{ env.NAME }}-worker"
