@@ -119,6 +119,8 @@ jobs:
         run: |
           IMAGE_URI="${ECR_REGISTRY}/${ECR_REPOSITORY}/${ACTIVE}:${IMAGE_TAG}"
           echo "IMAGE_URI=${IMAGE_URI}" >> $GITHUB_ENV
+          # If the repo ships env/<active>.env it is baked into the image; the run step then skips --env-file.
+          if [ -f "env/${ACTIVE}.env" ]; then echo "BAKED_ENV=1" >> $GITHUB_ENV; else echo "BAKED_ENV=0" >> $GITHUB_ENV; fi
           docker buildx build \
             --file Dockerfile \
             --tag ${IMAGE_URI} \
@@ -147,6 +149,11 @@ jobs:
             echo ${ECR_TOKEN} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
 
             docker pull ${IMAGE_URI}
+            # Baked image carries env/<active>.env; the old image needs the host env file.
+            ENV_FILE_ARG=""
+            if [ "${{ env.BAKED_ENV }}" != "1" ]; then
+              ENV_FILE_ARG="--env-file /home/forge/env.ai-tutor/${{ env.ACTIVE }}.env"
+            fi
             if [ "$(docker ps -a --format '{{.Names}}' | grep -c ${{ env.NAME }})" -gt 0 ]; then
               docker rm -f ${{ env.NAME }}
             fi
@@ -154,7 +161,7 @@ jobs:
               ${{ env.RUN_ARGS }} \
               -p ${{ env.OUT_PORT }}:${{ env.PORT }} \
               --restart unless-stopped \
-              --env-file /home/forge/env.ai-tutor/${{ env.ACTIVE }}.env \
+              ${ENV_FILE_ARG} \
               --log-driver=awslogs \
               --log-opt awslogs-region=ap-east-1 \
               --log-opt awslogs-group=/docker/${{ env.NAME }} \
@@ -169,7 +176,7 @@ jobs:
             docker run --name ${WORKER_NAME} -d \
               ${{ env.RUN_ARGS_WORKER }} \
               --restart unless-stopped \
-              --env-file /home/forge/env.ai-tutor/${{ env.ACTIVE }}.env \
+              ${ENV_FILE_ARG} \
               ${IMAGE_URI} \
               python scripts/azure_pa_worker.py
 
