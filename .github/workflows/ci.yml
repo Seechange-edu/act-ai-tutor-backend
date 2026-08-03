@@ -169,16 +169,21 @@ jobs:
               --log-opt awslogs-create-group=true \
               ${IMAGE_URI}
 
+            # Azure PA worker is DISABLED — see ai-tutor-backend doc/azure-pa-worker-current-issues.md.
+            # The teardown below stays active on purpose: without it a worker started by an earlier
+            # deploy would keep running forever on a stale image.
+            # Re-enabling requires cloud.aiTutor.useAzurePronunciationJobs=true on think-and-speak-backend;
+            # with the worker down that flag MUST be false or same-device jobs never get consumed.
             WORKER_NAME="${{ env.NAME }}-worker"
             if [ "$(docker ps -a --format '{{.Names}}' | grep -c ${WORKER_NAME})" -gt 0 ]; then
               docker rm -f ${WORKER_NAME}
             fi
-            docker run --name ${WORKER_NAME} -d \
-              ${{ env.RUN_ARGS_WORKER }} \
-              --restart unless-stopped \
-              ${ENV_FILE_ARG} \
-              ${IMAGE_URI} \
-              python scripts/azure_pa_worker.py
+            # docker run --name ${WORKER_NAME} -d \
+            #   ${{ env.RUN_ARGS_WORKER }} \
+            #   --restart unless-stopped \
+            #   ${ENV_FILE_ARG} \
+            #   ${IMAGE_URI} \
+            #   python scripts/azure_pa_worker.py
 
             docker image prune --force
             # Disabled: the old container is already removed by name above, and pruning here would delete
