@@ -115,18 +115,15 @@ jobs:
           ECR_REPOSITORY: ${{ secrets.AWS_ECR_REPOSITORY }}
           ACTIVE: ${{ env.ACTIVE }}
           IMAGE_TAG: ${{ env.BRANCH }}
-          # Read access to the private api-meter repo, whose Python SDK is a git
-          # dependency. Handed to the build as a BuildKit SECRET, never a build arg:
-          # build args are recorded in the image and readable with `docker history`.
-          GITHUB_TOKEN: ${{ secrets.ACTION_TOKEN }}
+          # No token for the build. api-meter's Python SDK used to be a git
+          # dependency on a private repository and needed one; it now comes from
+          # a public S3 prefix over plain HTTPS, like every other wheel.
 
         run: |
           IMAGE_URI="${ECR_REGISTRY}/${ECR_REPOSITORY}/${ACTIVE}:${IMAGE_TAG}"
           echo "IMAGE_URI=${IMAGE_URI}" >> $GITHUB_ENV
           # If the repo ships env/<active>.env it is baked into the image; the run step then skips --env-file.
           if [ -f "env/${ACTIVE}.env" ]; then echo "BAKED_ENV=1" >> $GITHUB_ENV; else echo "BAKED_ENV=0" >> $GITHUB_ENV; fi
-          printf '%s' "$GITHUB_TOKEN" > "$RUNNER_TEMP/github_token"
-          trap 'rm -f "$RUNNER_TEMP/github_token"' EXIT
           docker buildx build \
             --file Dockerfile \
             --tag ${IMAGE_URI} \
@@ -134,7 +131,6 @@ jobs:
             --cache-from=type=gha \
             --cache-to=type=gha,mode=max \
             --build-arg ENVIRONMENT=${{ env.ACTIVE }} \
-            --secret id=github_token,src="$RUNNER_TEMP/github_token" \
             . \
             --push
 
