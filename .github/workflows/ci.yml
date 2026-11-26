@@ -176,7 +176,7 @@ jobs:
               --log-opt awslogs-group=/docker/${{ env.NAME }} \
               --log-opt awslogs-stream=${{ env.ACTIVE }} \
               --log-opt awslogs-create-group=true \
-              ${IMAGE_URI}
+              ${IMAGE_URI} || exit 1
 
             # Azure PA worker is DISABLED — see ai-tutor-backend doc/azure-pa-worker-current-issues.md.
             # The teardown below stays active on purpose: without it a worker started by an earlier
