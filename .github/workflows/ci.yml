@@ -161,7 +161,12 @@ jobs:
             # Baked image carries env/<active>.env; the old image needs the host env file.
             ENV_FILE_ARG=""
             if [ "${{ env.BAKED_ENV }}" != "1" ]; then
-              ENV_FILE_ARG="--env-file /home/forge/env.ai-tutor/${{ env.ACTIVE }}.env"
+              ENV_FILE="/home/forge/env.ai-tutor/${{ env.ACTIVE }}.env"
+              if [ ! -f "$ENV_FILE" ] || [ ! -r "$ENV_FILE" ]; then
+                echo "Deploy aborted: env file is missing or unreadable: $ENV_FILE" >&2
+                exit 1
+              fi
+              ENV_FILE_ARG="--env-file $ENV_FILE"
             fi
             if [ "$(docker ps -a --format '{{.Names}}' | grep -c ${{ env.NAME }})" -gt 0 ]; then
               docker rm -f ${{ env.NAME }}
