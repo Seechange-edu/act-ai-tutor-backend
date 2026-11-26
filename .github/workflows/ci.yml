@@ -157,7 +157,7 @@ jobs:
             # Login to AWS ECR using temporary token from GitHub Actions
             echo ${ECR_TOKEN} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
 
-            docker pull ${IMAGE_URI}
+            docker pull "${IMAGE_URI}" || exit 1
             # Baked image carries env/<active>.env; the old image needs the host env file.
             ENV_FILE_ARG=""
             if [ "${{ env.BAKED_ENV }}" != "1" ]; then
